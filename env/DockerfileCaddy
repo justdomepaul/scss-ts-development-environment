@@ -1,0 +1,17 @@
+FROM alpine:edge
+LABEL maintainer="max@flashaim.com"
+
+RUN apk add --no-cache caddy~1.0.4-r2
+RUN mkdir /caddy
+RUN chown 1000:1000 /caddy
+RUN chmod 700 /caddy
+
+USER 1000
+ENV CADDYPATH /caddy
+WORKDIR /caddy
+VOLUME ["/caddy", "/var/www"]
+
+EXPOSE 80/tcp
+EXPOSE 443/tcp
+ENTRYPOINT ["/usr/sbin/caddy", "-conf", "/etc/caddy/caddy.conf", "-agree"]
+CMD []

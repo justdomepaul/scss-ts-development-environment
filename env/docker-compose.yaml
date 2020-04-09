@@ -1,0 +1,40 @@
+version: '3.7'
+x-base: &BASE
+  environment:
+    - LANG=en_US.UTF-8
+  restart: "unless-stopped"
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "1k"
+      max-file: "30"
+services:
+  node:
+    image: node:lts-buster
+    working_dir: /mnt
+    command: ["make", "build-client"]
+    volumes:
+      - ${PWD}/src:/mnt/src
+      - ${PWD}/dist:/mnt/dist
+      - ${PWD}/Makefile:/mnt/Makefile
+      - ${PWD}/package.json:/mnt/package.json
+      - ${PWD}/tsconfig.json:/mnt/tsconfig.json
+      - ${PWD}/webpack.config.js:/mnt/webpack.config.js
+  caddy:
+    <<: *BASE
+    image: builder-caddy:v0.0.0
+    container_name: builder-caddy
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    depends_on:
+      - node
+    environment:
+      CADDYPATH: '/etc/caddycerts'
+    extra_hosts:
+      - "www.example2.com:127.0.0.1"
+    volumes:
+      - ${PWD}/env/caddy:/etc/caddy
+      - ${PWD}/index.html:/srv/www/index.html
+      - ${PWD}/dist:/srv/www/dist
